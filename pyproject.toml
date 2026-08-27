@@ -1,0 +1,16 @@
+[project]
+name = "pac"
+version = "0.1.0"
+description = "Pac Man - 42's rendition on the original game"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "cx-freeze>=8.7.0",
+    "flake8>=7.3.0",
+    "mazegenerator",
+    "mypy>=2.3.0",
+    "pygame>=2.6.1",
+]
+
+[tool.uv.sources]
+mazegenerator = { path = "data/mazegenerator-00001-py3-none-any.whl" }
