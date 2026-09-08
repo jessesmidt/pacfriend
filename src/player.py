@@ -1,11 +1,25 @@
 import pygame as py
 from typing import Tuple, Any
-from timers import Timers
-from settings import Constants, Settings
-from ghost import Ghost
+from src.timers import Timers
+from src.settings import Constants, Settings
+from src.ghost import Ghost
 
 
 class Pacman():
+    """
+    This class handles player input, Pacman's movement logic and speeds
+    graphic rendering and respawn mechanics
+
+    Parameters:
+    - timers = Keeps track of movement timings, pre-game cooldown etc.
+    - settings = Necessary for keeping track of cheats
+    - dir = the players' actual direction
+    - input_dir = the players desired direction
+    - maze = the hexadecimal values for checking collisons
+    - lives = imports the amount of lives from settings
+    - ppos_x, ppos_y = the players position (tile based)
+    - x, y = the players position (pixel based)
+    """
     def __init__(self, timers: Timers, settings: Settings) -> None:
         self.timers = timers
         self.settings = settings

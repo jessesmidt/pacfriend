@@ -3,21 +3,45 @@
 try:
     from mazegenerator import MazeGenerator
 except ModuleNotFoundError:
-    raise ModuleNotFoundError(
-        "Maze generator Wheel was not found. Make sure to include."
-    )
+    print("\x1b[38;5;196m")
+    print("Maze generator Wheel was not found. Make sure to include.")
+    print("Otherwise, run \'make install\'")
+    print("\x1b[38;5;0m")
+    from os import _exit
+    _exit(0)
+
 import pygame
-from settings import Settings, Constants
-from buttons import TextButton
-from score import Scoringsystem
-from gums import PacGums
-from ghost import GhostManager
-from levels import Levels
-from timers import Timers
-from player import Pacman
+from src.settings import Settings, Constants
+from src.buttons import TextButton
+from src.score import Scoringsystem
+from src.gums import PacGums
+from src.ghost import GhostManager
+from src.timers import Timers
+from src.player import Pacman
 
 
 class Engine(Constants):
+    """
+    The Engine is the main handler for everything from the menu on.
+    It's responsible for the main game loop, keeping track of levels
+    and managing the scoring, timers, ghosts and player input.
+
+    Parameters:
+    - settings = The settings retrieved from the settings class
+    - swidth, sheight = the pixel-width/height of the complete maze
+    - screen = Pygame's Screen class, which creates the
+    game window
+    - clock = Pygame's clock, to keep timings up to the required speed
+    - maze_imagepath = Path to maze imagefile
+    - button_font / Score font = font styles we reuse from the main menu
+    - timers = Our timer class, to keep track of necessary timings
+    - scoring = Our scoring class, to keep track of scores
+    - seeds = list of map seeds, imported from our settings
+    - pac = Player class that handles input, rendering
+    - gameover = Boolean for handling gameovers (lives < 0)
+    - to_menu = Boolean that is used for handling back to menu inputs
+    - running = Boolean that keeps the game running, used for passing levels
+    """
     def __init__(self, settings: Settings,
                  clock: pygame.time.Clock,
                  button_font: pygame.font.Font,
@@ -37,7 +61,6 @@ class Engine(Constants):
             self.settings.points_per_super_pacgum,
             self.settings.points_per_ghost
             )
-        self.levels: Levels = Levels(self.settings)
         self.seeds: list[int] = self.settings.seeds
         self.pac = Pacman(self.timers, self.settings)
         self.gameover: bool = False
@@ -68,7 +91,7 @@ class Engine(Constants):
                     self.scoring.level_complete(completed)
         return self.running
 
-    def _pause(self) -> None:
+    def _pause(self, back_button: TextButton) -> None:
         """
         Seperate loop which pauses gameplay
         When paused is activated.
@@ -79,6 +102,9 @@ class Engine(Constants):
         )
         paused_text: pygame.Surface = paused_font.render("PAUSED",
                                                          False, "RED")
+        instruction_text: pygame.Surface = paused_font.render(
+            "press B to go back to menu", False, "white")
+        instruction_text = pygame.transform.scale(instruction_text, (300, 32))
         self.screen.blit(
             paused_text,
             (
@@ -86,20 +112,31 @@ class Engine(Constants):
                 self.screen.get_height() // 2
             )
         )
+        self.screen.blit(
+                    instruction_text,
+                    (self.screen.get_width() // 2 -
+                     instruction_text.get_width() // 2,
+                        (self.screen.get_height() // 2) + 64)
+                )
         pygame.display.flip()
         while self.running and paused:
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-                elif event.type == pygame.KEYDOWN:
-                    match event.key:
-                        case pygame.K_ESCAPE:
-                            self.running = False
-                        case pygame.K_p:
-                            paused = False
-                        case pygame.K_b:
+                match event.type:
+                    case pygame.MOUSEBUTTONDOWN:
+                        if back_button.is_clicked():
                             self.to_menu = True
                             paused = False
+                    case pygame.QUIT:
+                        self.running = False
+                    case pygame.KEYDOWN:
+                        match event.key:
+                            case pygame.K_ESCAPE:
+                                self.running = False
+                            case pygame.K_p:
+                                paused = False
+                            case pygame.K_b:
+                                self.to_menu = True
+                                paused = False
             self.clock.tick(Constants.TICKSPEED)
 
     def start_countdown(self) -> bool:
@@ -152,8 +189,10 @@ class Engine(Constants):
 
         skip_level: TextButton = TextButton(
             self.screen, "Skip", self.button_font, "Black", "Crimson",
-            back_button.width + 50, int(self.settings.SBAR_H * 0.15), 0.9
+            back_button.width + 50, int(self.settings.SBAR_H * 0.15), 0.9,
         )
+        if not self.settings.skip_level:
+            skip_level.enabled = False
 
         while (
             self.running and not self.to_menu
@@ -207,7 +246,7 @@ class Engine(Constants):
                     case pygame.KEYDOWN:
                         match event.key:
                             case pygame.K_p:
-                                self._pause()
+                                self._pause(back_button)
                             case pygame.K_b:
                                 self.to_menu = True
                             case pygame.K_ESCAPE:
@@ -354,6 +393,7 @@ class Engine(Constants):
         your name, when submitted, adds you to highscores and
         returns to menu.
         """
+        timer = 0
         done: int = 0
         name: str = ""
         end_screen = pygame.Surface((640, 480))
@@ -365,7 +405,7 @@ class Engine(Constants):
                 if event.type == pygame.KEYDOWN:
                     if (event.key == pygame.K_RETURN
                        or event.key == pygame.K_KP_ENTER):
-                        if '#' in name:
+                        if '#' in name or '"' in name or "'" in name:
                             name = "StopTrying"
                         if not self.settings.is_cheating():
                             self.scoring.highscores.add_player(
@@ -383,7 +423,14 @@ class Engine(Constants):
                             name += event.unicode
 
             end_screen.fill((30, 30, 30))
-            name_surface = self.score_font.render(name, False, "white")
+            if timer < 30:
+                name_surface = self.score_font.render(
+                    f"{name}_", False, "white")
+            else:
+                name_surface = self.score_font.render(name, False, "white")
+            timer += 1
+            if timer > 60:
+                timer = 0
 
             end_screen = self._win_loss_icons(end_screen)
             enter_name = self.score_font.render("enter name:", False, "white")

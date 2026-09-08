@@ -1,13 +1,39 @@
 from typing import Tuple, List, Set, Callable
-from settings import Constants, Settings
+from src.settings import Constants, Settings
 from math import floor
 import pygame
 import random
 
 
 class GhostManager(Constants):
+    """
+
+    Initialises and manages the Ghost which will used during the game
+
+    Attributes:
+        red_ghost (Ghost): The red ghost
+        pink_ghost (Ghost): The pink ghost
+        blue_ghost (Ghost): The blue ghost
+        orange_ghost (ghost): The orange ghoost
+        no_change (Callable):   A function to fill in actions with no change to
+                                the targeting direction
+        no_prediction (Callable): Targets pacman directly
+        ghost (Tuple[Ghost, Callable, bool]): The ghost which is currently
+                    targeting, the functio which modifies where ait targets and
+                      the boolean which states if it should go to pacman
+                      if the ghost is cose to Pac-Man
+
+    """
     def __init__(self, screen: pygame.Surface, maze: List[List[int]],
                  settings: Settings):
+        """
+
+        Arguments:
+            screen (pygame.Surface): The surface on which the ghost is drawn
+            maze (List[List[int]]): The map on which the ghost would run around
+            settings (Settings): The Settings of the saved game
+
+        """
         sp: List[List[int]] = [
             [0, 0],
             [0, (settings.height - 1) * self.T_SIZE],
@@ -44,8 +70,15 @@ class GhostManager(Constants):
     def opposite_direction(self, direction: int) -> int:
         """
         Returns the opposite cardinal direction of a given direction
-        If not a valid innitial direction or opposite in valid cardinals
-        it returns 0
+        Since our cardinals are defined as 1, 2, 4 and 8 a bitshift of two
+        which is one of these values is the opposite direction
+
+        Arguments:
+            direction (int): the direction
+
+        Returns:
+            int: the opposite direction
+
         """
         if direction << 2 in self.VALID_DIRS:
             return direction << 2
@@ -55,6 +88,37 @@ class GhostManager(Constants):
 
 
 class Ghost(Constants):
+    """
+
+    The ghost class which eill chase Pac-Man
+
+    Constants:
+        TD (int) = the distance around pacman the ghost targets
+        SLOW_SPEED (int): The speed the ghost moves at while fleeing
+
+    Attributes:
+        screen (pygame.Screen): Screen on which the ghost will be drawn
+        maze (List[List[int]]): The maze in which the ghost runs
+        scores (List[List[int]]):   The layer which the pathfinding calculation
+                                    is done
+        x_pos (int): Current x pos in pixels
+        y_pos (int): Current y pos in pixels
+        home_x (int):   initial x pixel location ghost spawns an where they
+                        scatter towards
+        home_y (int):   initial y pixel location ghost spawns an where they
+                        scatter towards
+        movement_speed (int): pixels moved per tick in current state
+        direction (int): direction pacman is moving
+        settings (Settings): The current settings of the game
+        color (str): The colour of the ghost
+        fleeing (bool): if the ghost is fleeing
+        flee_duration (int): The duration the ghost flees
+        respawn (int): time_to_respawn
+        skatter (int): duration the ghost skatters
+        hitbox_scale (float): the scale of the hitbox compared to image
+        ghost_img (pygame.Surface): image the ghost should have
+
+    """
     TD = 2
     SLOW_SPEED = 48
 
@@ -94,6 +158,9 @@ class Ghost(Constants):
     def start_fleeing(self, duration: int) -> None:
         """
         Sets the time which the ghost should flee
+
+        Arguments:
+            duration (int): duration the ghost should flee
         """
         if self.settings.always_flee:
             return
@@ -127,9 +194,14 @@ class Ghost(Constants):
         """
         A program that calculates the pathfinding, renders the ghost and checks
         if they overlap
+        Arguments:
+            pacman_coordinates (Tupple[int, int]): pacman coordinates on the
+                                pixel scale
+            pacman_direction (int): The direction in which paman is moving
+            close (bool): if they should aproach pacman if in TD range
 
-        target_x: int : Current x coordinate of goal on pixel scale
-        target_y: int : Current y coordinate of goal on pixel scale
+        Returns:
+            bool: if overlap with pacman True otherwise False
         """
         target_x, target_y = pacman_coordinates
         x_tile: int = (self.x_pos // self.T_SIZE)
@@ -156,7 +228,6 @@ class Ghost(Constants):
         if self.direction == 0 or (self.x_pos % self.T_SIZE == 0
                                    and self.y_pos % self.T_SIZE == 0):
             # Calculates only when there is no scores or pacman has moved
-            # print(f"Second: {pacman_coordinates}")
             self._calculated_board(
                 (target_x // self.T_SIZE),
                 (target_y // self.T_SIZE)
@@ -250,9 +321,11 @@ class Ghost(Constants):
     def _is_in_map(self, x_change: int, y_change: int) -> bool:
         """
         Checks that the change will still be in bounds of the pixels of the map
-
-        x_change: int = change in x coordinate on pixel scale
-        y_change: int = change in y coordinate on pixel scale
+        Arguments:
+            x_change: int = change in x coordinate on pixel scale
+            y_change: int = change in y coordinate on pixel scale
+        Returns:
+            bool: True if in map otherwise False
         """
         if self.x_pos + x_change < 0:
             return False
@@ -271,6 +344,10 @@ class Ghost(Constants):
 
         Modified slightly so if the difference between to adjacent cells is
         larger than one, its value will be recalculated
+
+        Argument:
+            target_x (int): x tile the pathfinding targets
+            target_y (int): y tile the pathfinding targets
         """
         neighbours: List[Tuple[int, int]] = [(target_x, target_y)]
         visited: Set[Tuple[int, int]] = {(target_x, target_y)}
@@ -330,6 +407,14 @@ class Ghost(Constants):
         Checks if the centre of the ghost falls in the borders of pacman after
         the borders have been adjiusted through player_grace and hitbox size.
         The smaller the hitbox modifier the larger the hitbox
+
+        Arguments:
+            target_x (int): the x pixel coordinate of topleft of pacman
+            target_y (int): the y pixel coordinate of topleft of pacman
+
+        Returns:
+            bool:   True if the ghost and playerss's hitboxes overlap
+                    otherwise false
         """
         # Grace given to players so that their hitbox is smaller
         player_grace: int = int((self.T_SIZE * self.hitbox_scale) // 2)
@@ -349,6 +434,19 @@ class Ghost(Constants):
                     target_y: int, nbr_tiles: int = TD) -> Tuple[int, int]:
         """
         Sets a target in the specified direction a set amount of tiles distance
+
+        Arguments:
+            search_direction (int): direction in which the targeting will
+                                    target initially
+            target_x (int): the x tile of the targett
+            target_y (int); the y tile of the target
+            nbr_tiles (int):    nbr_tiles it should offset ab\nd defaults to
+                                the local constant TD
+
+        Returns:
+            Tupple[int, int]:   The modified target coordinates whcih the ghost
+                                will move towards
+
         """
         explore_directions: List[int] = [num for num in self.VALID_DIRS
                                          if num != search_direction]

@@ -1,9 +1,19 @@
 from typing import Dict, List
-from json_work import JSONWork
+from src.json_work import JSONWork
 import os
 
 
 class Highscore(JSONWork):
+    """
+    Inherited from JSONwork, whenever a file path gets processed,
+    we'll first check valid JSON (after the required comments).
+    Handles adding players, keeping the highscores.json neat
+    and a helper function to return number 1 highscorer.
+
+    parameters:
+    - highscores = list of max 10 players and their score
+    {player_name: score}
+    """
     def __init__(self, path: str):
         self.highscores: List[Dict] = []
         super().__init__(path)

@@ -1,11 +1,25 @@
 # pyright: reportMissingImports=false
 
-from score import Scoringsystem
-from settings import Settings
+from src.score import Scoringsystem
+from src.settings import Settings
 import pygame
 
 
 class PacGums():
+    """
+    Handles gum placement, rendering and tile visiting for pacman.
+
+    parameters:
+    maze = the generated maze, uses its x, y tiles to place gums on
+    gums = the list in which the gums, sgums are stored
+    screen = the game window to render gums on top of
+    x, y = the tile based coordinates of the maze
+    gum_img = a pygame Surface for the gums representation
+    sgum_img = a pygame Surface for the super gum
+    scores = Scores class, to add points whenever necessary
+    settings = Settings class, to retrieve points per item
+    tsize = alias for self.settings.T_SIZE to shorten line length
+    """
     def __init__(self, maze: list[list[int]], screen: pygame.Surface,
                  scoring: Scoringsystem, settings: Settings) -> None:
         self.maze: list[list[int]] = maze
@@ -21,7 +35,6 @@ class PacGums():
         self.sgum_img = pygame.transform.scale(sgum_img, (16, 16))
         self.scores: Scoringsystem = scoring
         self.settings: Settings = settings
-        self.temp_value: int = 0
         self.tsize = self.settings.T_SIZE
 
     def init_gums(self) -> None:

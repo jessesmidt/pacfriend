@@ -1,30 +1,33 @@
 from typing import Dict, List
-from settings import Settings, Constants
-from buttons import TextButton, ImageButton, ToggleButton
-from engine import Engine
-from highscores import Highscore
+from src.settings import Settings, Constants
+from src.buttons import TextButton, ImageButton, ToggleButton
+from src.engine import Engine
+from src.highscores import Highscore
 import pygame
-import errors as PME
+from src import errors as PME
 import sys
 import os
 
 
 def pacman_main() -> None:
     """
-    The main body from which pasan is launched
+    The main body from which pacman is launched.
+    A lot of our fonts and buttons are imported here.
+    The visual of the main menu is made here.
     """
     if len(sys.argv) > 2:
-        print("Please provide a valid JSON configuration file")
+        print("Please provide only one valid JSON configuration file")
         return
-    if len(sys.argv) == 1:
-        sys.argv.append("")
+    settings: Settings = Settings()
     try:
-        settings: Settings = Settings.extract_settings(sys.argv[1])
+        if len(sys.argv) == 1:
+            settings = settings.extract_settings(None)
+        else:
+            settings = settings.extract_settings(sys.argv[1])
     except PME.InvalidJson as e:
-        print(f"ERROR: {e}")
+        print(f"JSON ERROR: {e}")
         return
     os.environ['SDL_VIDEO_CENTERED'] = '1'
-    os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
     pygame.init()
     clock: pygame.time.Clock = pygame.time.Clock()
     pygame.display.set_caption("Pac-Man | Main Menu")
@@ -55,7 +58,7 @@ def pacman_main() -> None:
         "---------", False, "Gold"
     )
     instructions = pygame.transform.scale(
-        pygame.image.load("data/assets/intructions.png"), (360, 360))
+        pygame.image.load("data/assets/instructions.png"), (720, 360))
     running: bool = True
     animation: int = 0
     up_down: bool = True
@@ -63,7 +66,8 @@ def pacman_main() -> None:
         main_menu.fill("Black")
         main_menu.blit(title, (555, 50))
         main_menu.blit(underline, (500, 100))
-        main_menu.blit(instructions, (0, 670))
+        main_menu.blit(instructions, (0, 670), area=(0, 0, 360, 360))
+        main_menu.blit(instructions, (1120, 670), area=(360, 0, 720, 360))
         settings_button.draw_button()
         highscore_button.draw_button()
 
@@ -135,7 +139,7 @@ def display_highscores(screen: pygame.Surface,
     settings -  the current loaded settings of Pacman when the game is launched
                 which includes the path to highscores
     """
-    SCREEN_WIDTH = 1500
+    SCREEN_WIDTH = screen.get_width()
     pygame.display.set_caption("Pac-Man | Highscores")
     keep_displaying: bool = True
     caption_font: pygame.font.Font = pygame.font.Font(
@@ -173,6 +177,8 @@ def display_highscores(screen: pygame.Surface,
     x_offset: int = 0
     y_offset: int = 0
     for i, d in enumerate(data):
+        if "name" not in d.keys() or "score" not in d.keys():
+            continue
         i += 1
         information: str = f"{i}. {d["name"]}: {d["score"]}"
         player: pygame.Surface = basic_font.render(
@@ -219,7 +225,7 @@ def display_settings(screen: pygame.Surface, clock: pygame.time.Clock,
     clock    -  pygame.Clock and the tickspeed at which it is run
     settings -  the current loaded settings of Pacman when the game is launched
     """
-    SCREEN_WIDTH = 1500
+    SCREEN_WIDTH = screen.get_width()
     screen.fill("Black")
     caption_font: pygame.font.Font = pygame.font.Font(
         "data/font/Pixeltype.ttf",
@@ -404,7 +410,3 @@ def display_settings(screen: pygame.Surface, clock: pygame.time.Clock,
     pygame.event.clear()
     settings.save_settings()
     return running
-
-
-if __name__ == "__main__":
-    pacman_main()

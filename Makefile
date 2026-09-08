@@ -19,17 +19,16 @@ install: venv
 	@UV_SKIP_WHEEL_FILENAME_CHECK=1 uv sync --all-groups
 
 run:
-	@UV_SKIP_WHEEL_FILENAME_CHECK=1 PYGAME_HIDE_SUPPORT_PROMPT=1 uv run src/__main__.py data/settings/settings.json
+	@UV_SKIP_WHEEL_FILENAME_CHECK=1 PYGAME_HIDE_SUPPORT_PROMPT=1 uv run pac-man.py data/settings/settings.json
 
 dist:
-	@UV_SKIP_WHEEL_FILENAME_CHECK=1  uv run cxfreeze --script src/__main__.py --target-dir dist
+	@UV_SKIP_WHEEL_FILENAME_CHECK=1  uv run cxfreeze --script pac-man.py --target-dir dist
 	@cp -r data dist/data
-	@mv dist/__main__ dist/Pac-Man
-	@cd dist && tar -c -f ../Pac-Man .
+	@cd dist && tar -c -f ../pac-man .
 
-debug:
+debug: install
 	@echo "Launching Pac-Man in debug mode..."
-	$(PYTHON) -m pdb src/main.py
+	@UV_SKIP_WHEEL_FILENAME_CHECK=1 uv run -m pdb pac-man.py data/settings/settings.json
 
 clean:
 	@echo "Cleaning temporary files and caches..."
@@ -40,10 +39,10 @@ clean:
 	@find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type d -name "*-info" -exec rm -rf {} + 2>/dev/null || true
-	@find . -type d -name "Pac-Man*" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name "pac-man*" -exec rm -rf {} + 2>/dev/null || true
 	@find . -type f -name "*.pyc" -delete 2>/dev/null || true
 	@find . -type f -name "*.lock" -delete 2>/dev/null || true
-	@find . -type f -name "Pac-Man" -delete 2>/dev/null || true
+	@find . -type f -name "pac-man" -delete 2>/dev/null || true
 	@echo "Cleanup complete!"
 
 lint:

@@ -1,10 +1,22 @@
 from typing import Dict, Any
-import errors as PME
+from src import errors as PME
 import os
 import json
 
 
 class JSONWork:
+    """
+    Because this project requires handling python style comments
+    we have a special class for handling our JSON files.
+
+    parameters:
+    - path = path to any JSON file
+    - comments_found = Dictionary of any comments that are found,
+    stored in {int, str} / {line count, comment}
+    - inline_comments_found = Dictionary of any inline-commends
+    found, stored in {int, str} / {line count, comment}
+    - data = Where clean, comment-stripped data is left.
+    """
     def __init__(self, path: str):
         self.path: str = path
         self.comments_found: Dict[int, str] = dict([])

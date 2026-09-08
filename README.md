@@ -2,10 +2,21 @@
 
 # Pacman
 
+## Table of Contents
+1. [Description](#description)
+2. [Instructions](#instructions)
+3. [Implementation / Design Decision](#implementation--design-decisions)
+3. [Challenges Faced](#challenges-faced)
+4. [Resources](#resources)
+5. [Module Overview](#module-overview)
+6. [Project Management](#project-management)
+
 ## Description
 
 CODAM / 42's Pacman project: Recreate the famous arcade game Pac-man!  
 This is our version of the Arcade classic. Including 4 ghosts similiar to the original, 10 challenging hand picked maps and a highscore system to compete with your peers.
+
+Our game is online, play it on [itch.io](https://eierkoekman.itch.io/42-pacman-clone)
 
 ## Instructions
 
@@ -66,7 +77,7 @@ Changes the amount of points that each pick-up will give you
 
 ### Highscoring
 
-At the end of a game a player is prompted to provide a name for their score to be saved to the highscore system. The name is automatically limited to ten characters and the inclusion of a '#' will override a name with the text 'StopTrying'. 
+At the end of a game a player is prompted to provide a name for their score to be saved to the highscore system. The name is automatically limited to alphanumerical characters, to prevent bugs in the Highscore's JSON file. 
 The player's score is converted to a dictionary element with their name as the key and their score as the value. Only the ten entries with the highest score are saved to the file and they are sorted in descending order. If a cheat is enabled then a score will not be saved. 
 
 ### Maze generation
@@ -74,7 +85,7 @@ We initialise the Maze generation with default values only with a different seed
 The maze is extracted as a List[List[int]] and used throughout the program as the unmodified base layer.
 
 
-## Implementation / Design Decisions  
+## Implementation / Design Decisions
 
 ### Engine  
 Engine is the main class managing the gameplay loop, manages all the game related classes and responsible for everything beyond the main menu. It's responsible for handling scores, lives, timers player input and the ghosts moving.
@@ -168,7 +179,6 @@ src/
 ├── gums.py               # Gums, Supergums, tile visiting
 ├── highscores.py         # JSON highscoring
 ├── json_work.py          # JSON modifications, commenting
-├── levels.py             # Level / seed handler
 ├── player.py             # Rendering player / player inputs
 ├── score.py              # Scoring / points system
 ├── settings.py           # Settings parser / default settings

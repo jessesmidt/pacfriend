@@ -1,8 +1,19 @@
 
-from highscores import Highscore
+from src.highscores import Highscore
 
 
 class Scoringsystem():
+    """
+    Handles opening the highscores file, fallback, gathering points
+    and retrieving highscores for the main screen.
+
+    parameters:
+    - score = The players current score in integer, default = 0
+    - highscores = The current highscore, retrieved from highscores class.
+    Falls back to 0 whenever retrieving fails
+    - pacgums_pts, spacgum_pts, ghost_pts = amount of points per consume,
+    fetched from settings
+    """
     def __init__(
             self, pacgum_pts: int, spacgum_pts: int, ghost_pts: int
             ) -> None:
